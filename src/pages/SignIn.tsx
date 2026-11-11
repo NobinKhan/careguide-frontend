@@ -22,14 +22,39 @@ export function SignIn() {
   const [errorMsg, setErrorMsg] = createSignal<string | null>(null);
   const [fieldErrors, setFieldErrors] = createSignal<Record<string, string>>({});
 
-  const demoAccounts = import.meta.env.DEV
-    ? [
-        { name: 'System Admin', email: 'admin@careguide.bd', role: 'admin', pass: 'Admin@123' },
-        { name: 'Kazi Nazrul', email: 'nazrul@careguide.bd', role: 'user', pass: 'User@123' },
-        { name: 'Abdur Rahim', email: 'rahim@careguide.bd', role: 'user', pass: 'User@123' },
-        { name: 'Abdul Karim', email: 'karim@careguide.bd', role: 'user', pass: 'User@123' },
-      ]
-    : [];
+  // Dev-only demo switcher. Passwords come from .env.development.local (never committed)
+  // and must match the backend's SEED_ADMIN_PASSWORD / SEED_USER_PASSWORD.
+  const demoAdminPassword = import.meta.env.VITE_DEMO_ADMIN_PASSWORD as string | undefined;
+  const demoUserPassword = import.meta.env.VITE_DEMO_USER_PASSWORD as string | undefined;
+  const demoAccounts =
+    import.meta.env.DEV && demoAdminPassword && demoUserPassword
+      ? [
+          {
+            name: 'System Admin',
+            email: 'admin@careguide.bd',
+            role: 'admin',
+            pass: demoAdminPassword,
+          },
+          {
+            name: 'Kazi Nazrul',
+            email: 'nazrul@careguide.bd',
+            role: 'user',
+            pass: demoUserPassword,
+          },
+          {
+            name: 'Abdur Rahim',
+            email: 'rahim@careguide.bd',
+            role: 'user',
+            pass: demoUserPassword,
+          },
+          {
+            name: 'Abdul Karim',
+            email: 'karim@careguide.bd',
+            role: 'user',
+            pass: demoUserPassword,
+          },
+        ]
+      : [];
 
   const handleLogin = async (e: Event) => {
     e.preventDefault();

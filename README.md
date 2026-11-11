@@ -3,7 +3,7 @@
 Role-based dashboard built with **SolidJS v2 (`solid-js@2.0.0-rc.21`, `@solidjs/web@2.0.0-rc.21`)** and **Tailwind CSS** (Cloudflare Pages ready).
 
 ## Features
-- **1-Click Live Interview Demo Switcher:** Instant switching between `Admin`, `User 1 (Nazrul)`, `User 2 (Rahim)`, and `User 3 (Karim)`.
+- **1-Click Live Interview Demo Switcher:** Instant switching between `Admin`, `User 1 (Nazrul)`, `User 2 (Rahim)`, and `User 3 (Karim)`. Dev only (`bun run dev`), shown when `VITE_DEMO_ADMIN_PASSWORD` and `VITE_DEMO_USER_PASSWORD` are set in `.env.development.local`; never included in production builds.
 - **My Notes & Interests:** Update personal `interests` array (`PATCH /api/users/me/interests`) and manage private notes (`GET/POST/PATCH/DELETE /api/notes`).
 - **Public Posts:** Publish and browse paginated public posts (`GET/POST /api/posts`).
 - **MongoDB Aggregations Lab:**
