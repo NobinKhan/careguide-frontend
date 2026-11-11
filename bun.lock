@@ -5,6 +5,7 @@
     "": {
       "name": "careguide-frontend",
       "dependencies": {
+        "@solidjs/router": "2.0.0-next.37",
         "@solidjs/web": "2.0.0-rc.21",
         "hono": "^4.13.17",
         "solid-js": "2.0.0-rc.21",
@@ -86,6 +87,8 @@
     "@solidjs/compiler-wasm32-wasi": ["@solidjs/compiler-wasm32-wasi@2.0.0-rc.21", "", { "dependencies": { "@emnapi/core": "1.11.3", "@emnapi/runtime": "1.11.3", "@napi-rs/wasm-runtime": "^1.1.6" } }, "sha512-gQeaqDoie2wgh8ph2Ti89mFiBthVmq0EWYL5HesI45K5NvvrlvaftZs0Zt3VlVQrvz79A7OLKhHX+2aD6PvnzA=="],
 
     "@solidjs/compiler-win32-x64-msvc": ["@solidjs/compiler-win32-x64-msvc@2.0.0-rc.21", "", { "os": "win32", "cpu": "x64" }, "sha512-cGNQL/7MF/CudNo1j2C9TEG/wTKZtFuSAQRPhU/UKzlq61oO5tKWLRugGWY4qGZ+K+4iw6CpSAuj4/s0z0POww=="],
+
+    "@solidjs/router": ["@solidjs/router@2.0.0-next.37", "", { "peerDependencies": { "@solidjs/web": "^2.0.0-rc.14", "filesystem-routing": ">=0.4.0", "solid-js": "^2.0.0-rc.14" }, "optionalPeers": ["filesystem-routing"] }, "sha512-jg24cNEyNc/kGfXbWM3X+ZzivVCiIB9sxDvn93j7T8WrhNr2iIUI2wZM9bQhRIIbrPZu1dNKJtZBfRwLlzyesA=="],
 
     "@solidjs/signals": ["@solidjs/signals@2.0.0-rc.21", "", {}, "sha512-F1TUMO/nd1XC//+tcaWxibOOgXBHQGmNQnAeiDnpLh+1smnlwIgKF6pc20evlyfQwqf0gP6rH4sNEqCPBNcpgg=="],
 

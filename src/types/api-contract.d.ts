@@ -59,6 +59,8 @@ interface InterestGroupDTO {
     totalUsers: number;
     users: InterestGroupUserDTO[];
 }
+interface InterestGroupsPaginatedDTO extends PaginatedResponse<InterestGroupDTO> {
+}
 interface UserWithPostsDTO extends UserDTO {
     posts: PostDTO[];
 }
@@ -66,4 +68,10 @@ interface UserPostsAggregationResponseDTO {
     user: UserWithPostsDTO;
     page: number;
     limit: number;
+    total: number;
+    totalPages: number;
+}
+interface ApiErrorDTO {
+    error: string;
+    fields?: Record<string, string>;
 }
