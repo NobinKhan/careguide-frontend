@@ -19,6 +19,17 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
+export class ApiClientError extends Error {
+  fields?: Record<string, string>;
+  status?: number;
+  constructor(message: string, status?: number, fields?: Record<string, string>) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.fields = fields;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
@@ -32,14 +43,37 @@ export async function apiFetch<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new ApiClientError("Can't reach the server.", 0);
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || `Request failed with status ${res.status}`);
+    if (res.status === 401 && path !== '/api/auth/login') {
+      setStoredToken(null);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('careguide:signed-out'));
+      }
+    }
+
+    let msg: string;
+    if (res.status === 500) {
+      msg = 'Something went wrong. Try again.';
+    } else if (typeof data?.error === 'string') {
+      msg = data.error;
+    } else if (data?.error?.issues?.[0]?.message) {
+      msg = data.error.issues[0].message;
+    } else {
+      msg = `Request failed (${res.status})`;
+    }
+
+    throw new ApiClientError(msg, res.status, data?.fields);
   }
   return data as T;
 }
@@ -51,7 +85,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(body),
       }),
-    register: (body: { name: string; email: string; password: string; interests: string[] }) =>
+    register: (body: { name: string; email: string; password: string; interests?: string[] }) =>
       apiFetch<AuthResponseDTO>('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -98,9 +132,9 @@ export const api = {
       ),
   },
   notes: {
-    listOwn: (page = 1, limit = 5) =>
+    listOwn: (page = 1, limit = 10) =>
       apiFetch<PaginatedResponse<NoteDTO>>(`/api/notes?page=${page}&limit=${limit}`),
-    listAllAdmin: (page = 1, limit = 5) =>
+    listAllAdmin: (page = 1, limit = 10) =>
       apiFetch<PaginatedResponse<NoteDTO>>(`/api/notes/all?page=${page}&limit=${limit}`),
     create: (body: { title: string; content: string }) =>
       apiFetch<{ note: NoteDTO }>('/api/notes', {
@@ -118,7 +152,7 @@ export const api = {
       }),
   },
   posts: {
-    list: (page = 1, limit = 5) =>
+    list: (page = 1, limit = 10) =>
       apiFetch<PaginatedResponse<PostDTO>>(`/api/posts?page=${page}&limit=${limit}`),
     create: (body: { title: string; body: string }) =>
       apiFetch<{ post: PostDTO }>('/api/posts', {
@@ -127,8 +161,10 @@ export const api = {
       }),
   },
   aggregations: {
-    usersByInterest: () =>
-      apiFetch<{ items: InterestGroupDTO[] }>('/api/aggregations/users-by-interest'),
+    usersByInterest: (page = 1, limit = 10) =>
+      apiFetch<InterestGroupsPaginatedDTO>(
+        `/api/aggregations/users-by-interest?page=${page}&limit=${limit}`
+      ),
     userPosts: (userId: string, page = 1, limit = 5) =>
       apiFetch<UserPostsAggregationResponseDTO>(
         `/api/aggregations/user-posts/${userId}?page=${page}&limit=${limit}`
