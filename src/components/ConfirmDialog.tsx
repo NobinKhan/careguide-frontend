@@ -1,4 +1,4 @@
-import { Portal } from '@solidjs/web';
+import { Portal, type JSX } from '@solidjs/web';
 import { createEffect, onCleanup, Show } from 'solid-js';
 
 export interface ConfirmDialogProps {
@@ -13,12 +13,12 @@ export interface ConfirmDialogProps {
   isLoading?: boolean;
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
-  children?: any;
+  children?: JSX.Element;
 }
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
-  let confirmBtnRef: HTMLButtonElement | undefined;
-  let dialogRef: HTMLDivElement | undefined;
+  let confirmBtnRef!: HTMLButtonElement;
+  let dialogRef!: HTMLDivElement;
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {

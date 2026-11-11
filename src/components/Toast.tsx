@@ -8,7 +8,7 @@ export interface ToastMessage {
 }
 
 const [toast, setToast] = createSignal<ToastMessage | null>(null);
-let timeoutId: any = null;
+let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 export function showToast(text: string, type: 'success' | 'error' | 'info' = 'success') {
   if (timeoutId) clearTimeout(timeoutId);

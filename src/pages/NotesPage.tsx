@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Icon } from '../components/Icon';
 import { showToast } from '../components/Toast';
+import { formatDate } from '../lib/formatDate';
 
 export function NotesPage() {
   const [notes, setNotes] = createSignal<NoteDTO[]>([]);
@@ -35,8 +36,8 @@ export function NotesPage() {
       setPage(res.page);
       setTotalPages(res.totalPages);
       setTotal(res.total);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to load notes', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to load notes', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -84,11 +85,11 @@ export function NotesPage() {
       }
       setIsEditorOpen(false);
       fetchNotes(page());
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiClientError && err.fields) {
         setFieldErrors(err.fields);
       }
-      setFormError(err.message || 'Failed to save note');
+      setFormError(err instanceof Error ? err.message : 'Failed to save note');
     } finally {
       setIsSaving(false);
     }
@@ -104,29 +105,17 @@ export function NotesPage() {
       showToast('Note deleted');
       setNoteToDelete(null);
       fetchNotes(page());
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete note', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to delete note', 'error');
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const formatDate = (iso?: string) => {
-    if (!iso) return '';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    } catch {
-      return '';
     }
   };
 
   return (
     <div>
       <PageHeader
+        crumb="Workspace"
         title="My notes"
         description="Private notes only you can see."
         actions={
