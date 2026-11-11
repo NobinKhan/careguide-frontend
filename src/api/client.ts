@@ -30,10 +30,7 @@ export class ApiClientError extends Error {
   }
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
   const headers = new Headers(options.headers || {});
   if (!headers.has('Content-Type') && options.body) {
@@ -126,10 +123,9 @@ export const api = {
         body: JSON.stringify(body),
       }),
     remove: (id: string, keepData: boolean) =>
-      apiFetch<DeleteUserResponseDTO>(
-        `/api/users/${id}?keepData=${keepData ? 'true' : 'false'}`,
-        { method: 'DELETE' }
-      ),
+      apiFetch<DeleteUserResponseDTO>(`/api/users/${id}?keepData=${keepData ? 'true' : 'false'}`, {
+        method: 'DELETE',
+      }),
   },
   notes: {
     listOwn: (page = 1, limit = 10) =>

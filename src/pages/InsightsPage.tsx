@@ -3,9 +3,9 @@ import { useSearchParams } from '@solidjs/router';
 import { api } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
-import { EmptyState } from '../components/EmptyState';
 import { currentUser } from '../state/session';
 import { showToast } from '../components/Toast';
+import { formatDate } from '../lib/formatDate';
 
 export function InsightsPage() {
   const [searchParams] = useSearchParams();
@@ -27,8 +27,8 @@ export function InsightsPage() {
     try {
       const res = await api.aggregations.usersByInterest(1, 100);
       setInterestGroups(res.items);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to load interest groups', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to load interest groups', 'error');
     } finally {
       setIsLoadingInterests(false);
     }
@@ -43,8 +43,8 @@ export function InsightsPage() {
       setPostsPage(res.page);
       setPostsTotalPages(res.totalPages);
       setPostsTotal(res.total);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to load user posts', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to load user posts', 'error');
     } finally {
       setIsLoadingPosts(false);
     }
@@ -78,21 +78,10 @@ export function InsightsPage() {
     fetchUserPosts(userId, 1);
   };
 
-  const formatDate = (iso?: string) => {
-    if (!iso) return '';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return '';
-    }
-  };
-
   return (
     <div>
       <PageHeader
+        crumb="Workspace"
         title="People & interests"
         description="See which interests people share, and read anyone's posts."
       />
@@ -221,9 +210,7 @@ export function InsightsPage() {
                               {formatDate(post.createdAt)}
                             </span>
                           </div>
-                          <p class="text-xs text-slate-600 line-clamp-2 break-words">
-                            {post.body}
-                          </p>
+                          <p class="text-xs text-slate-600 line-clamp-2 break-words">{post.body}</p>
                         </div>
                       )}
                     </For>

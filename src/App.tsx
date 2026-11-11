@@ -1,5 +1,6 @@
 import { onSettled, Show, createEffect } from 'solid-js';
 import { createRouter, useNavigate } from '@solidjs/router';
+import type { JSX } from '@solidjs/web';
 import { currentUser, isAdmin, isInitializing, initSession } from './state/session';
 import { Shell } from './components/Shell';
 import { Toast } from './components/Toast';
@@ -22,7 +23,7 @@ function RedirectToNotes() {
   return null;
 }
 
-function AdminGuard(props: { children?: any }) {
+function AdminGuard(props: { children?: JSX.Element }) {
   const navigate = useNavigate();
 
   createEffect(
@@ -37,7 +38,7 @@ function AdminGuard(props: { children?: any }) {
   return <Show when={isAdmin()}>{props.children}</Show>;
 }
 
-function AuthenticatedLayout(props: { children?: any }) {
+function AuthenticatedLayout(props: { children?: JSX.Element }) {
   const navigate = useNavigate();
 
   createEffect(

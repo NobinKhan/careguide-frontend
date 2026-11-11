@@ -7,7 +7,10 @@
     "dev": "vite --port 5173 --host",
     "build": "vite build",
     "preview": "vite preview --port 4173 --host",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
     "@solidjs/router": "2.0.0-next.37",
@@ -16,9 +19,13 @@
     "solid-js": "2.0.0-rc.21"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.5",
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.3.5",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2",
     "vite": "^8.3.7",
     "vite-plugin-solid": "3.0.0-next.27"
   }

@@ -1,9 +1,10 @@
 import { createSignal, Show, For } from 'solid-js';
 import { useLocation } from '@solidjs/router';
+import type { JSX } from '@solidjs/web';
 import { currentUser, isAdmin, signOut } from '../state/session';
 import { Icon, type IconName } from './Icon';
 
-export function Shell(props: { children?: any }) {
+export function Shell(props: { children?: JSX.Element }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
   const [isMoreSheetOpen, setIsMoreSheetOpen] = createSignal(false);
@@ -113,9 +114,7 @@ export function Shell(props: { children?: any }) {
               {getInitials(currentUser()?.name)}
             </div>
             <div class="min-w-0 leading-tight">
-              <div class="text-xs font-semibold text-[#1a2233] truncate">
-                {currentUser()?.name}
-              </div>
+              <div class="text-xs font-semibold text-[#1a2233] truncate">{currentUser()?.name}</div>
               <div class="text-[11px] text-[#566275] truncate">{currentUser()?.email}</div>
             </div>
           </div>

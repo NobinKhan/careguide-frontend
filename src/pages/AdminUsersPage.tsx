@@ -7,7 +7,10 @@ import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { AddMemberDialog } from '../components/AddMemberDialog';
+import { EditMemberDialog } from '../components/EditMemberDialog';
 import { Icon } from '../components/Icon';
+import { formatDate } from '../lib/formatDate';
 
 export function AdminUsersPage() {
   const navigate = useNavigate();
@@ -23,29 +26,12 @@ export function AdminUsersPage() {
   const [editUser, setEditUser] = createSignal<UserDTO | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<UserDTO | null>(null);
   const [deleteKeepData, setDeleteKeepData] = createSignal(true);
-
-  // Form states - Create
-  const [createName, setCreateName] = createSignal('');
-  const [createEmail, setCreateEmail] = createSignal('');
-  const [createPassword, setCreatePassword] = createSignal('');
-  const [createRole, setCreateRole] = createSignal<'user' | 'admin'>('user');
-  const [createInterests, setCreateInterests] = createSignal('');
-  const [createError, setCreateError] = createSignal<string | null>(null);
-  const [creating, setCreating] = createSignal(false);
-
-  // Form states - Edit
-  const [editName, setEditName] = createSignal('');
-  const [editEmail, setEditEmail] = createSignal('');
-  const [editRole, setEditRole] = createSignal<'user' | 'admin'>('user');
-  const [editInterests, setEditInterests] = createSignal('');
-  const [editError, setEditError] = createSignal<string | null>(null);
-  const [saving, setSaving] = createSignal(false);
   const [deleting, setDeleting] = createSignal(false);
 
-  const loadUsers = async () => {
+  const loadUsers = async (pageNum: number) => {
     setLoading(true);
     try {
-      const res = await api.users.list(page(), 10);
+      const res = await api.users.list(pageNum, 10);
       setUsers(res.items);
       setTotalPages(res.totalPages);
       setTotalItems(res.total);
@@ -59,102 +45,10 @@ export function AdminUsersPage() {
 
   createEffect(
     () => page(),
-    () => {
-      loadUsers();
+    (pageNum) => {
+      loadUsers(pageNum);
     }
   );
-
-  const openCreateDialog = () => {
-    setCreateName('');
-    setCreateEmail('');
-    setCreatePassword('');
-    setCreateRole('user');
-    setCreateInterests('');
-    setCreateError(null);
-    setCreateOpen(true);
-  };
-
-  const handleCreateUser = async (e: Event) => {
-    e.preventDefault();
-    setCreateError(null);
-    setCreating(true);
-
-    try {
-      const interestsArray = createInterests()
-        .split(',')
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-
-      await api.users.create({
-        name: createName().trim(),
-        email: createEmail().trim(),
-        password: createPassword(),
-        role: createRole(),
-        interests: interestsArray,
-      });
-
-      showToast('Member created successfully', 'success');
-      setCreateOpen(false);
-      loadUsers();
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setCreateError(err.message);
-      } else {
-        setCreateError('Failed to create member');
-      }
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const openEditDialog = (u: UserDTO) => {
-    setEditUser(u);
-    setEditName(u.name);
-    setEditEmail(u.email);
-    setEditRole(u.role);
-    setEditInterests((u.interests || []).join(', '));
-    setEditError(null);
-  };
-
-  const handleSaveEdit = async (e: Event) => {
-    e.preventDefault();
-    const u = editUser();
-    if (!u) return;
-    setEditError(null);
-    setSaving(true);
-
-    try {
-      const interestsArray = editInterests()
-        .split(',')
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-
-      const isSelf = currentUser()?._id === u._id;
-      const payload: Parameters<typeof api.users.update>[1] = {
-        name: editName().trim(),
-        email: editEmail().trim(),
-        interests: interestsArray,
-      };
-
-      // Disallow self-demotion from UI
-      if (!isSelf) {
-        payload.role = editRole();
-      }
-
-      await api.users.update(u._id, payload);
-      showToast('Member updated', 'success');
-      setEditUser(null);
-      loadUsers();
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setEditError(err.message);
-      } else {
-        setEditError('Failed to update member');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async () => {
     const u = deleteTarget();
@@ -164,11 +58,11 @@ export function AdminUsersPage() {
     try {
       const res = await api.users.remove(u._id, deleteKeepData());
       const msg = deleteKeepData()
-        ? `Account deleted. Notes and posts were kept.`
+        ? 'Account deleted. Notes and posts were kept.'
         : `Account deleted with ${res.deletedNotesCount} notes and ${res.deletedPostsCount} posts.`;
       showToast(msg, 'success');
       setDeleteTarget(null);
-      loadUsers();
+      loadUsers(page());
     } catch (err) {
       const msg = err instanceof ApiClientError ? err.message : 'Failed to delete member';
       showToast(msg, 'error');
@@ -177,26 +71,14 @@ export function AdminUsersPage() {
     }
   };
 
-  const formatDate = (iso?: string) => {
-    if (!iso) return '—';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return '—';
-    }
-  };
-
   return (
     <div class="space-y-6">
       <PageHeader
+        crumb="Admin"
         title="Members"
         description="Manage team member accounts, roles, and workspace access."
         action={
-          <button onClick={openCreateDialog} class="btn btn-primary">
+          <button onClick={() => setCreateOpen(true)} class="btn btn-primary">
             <Icon name="plus" size={16} />
             <span>Add member</span>
           </button>
@@ -250,9 +132,7 @@ export function AdminUsersPage() {
                         <td data-label="Role">
                           <span
                             class={
-                              u.role === 'admin'
-                                ? 'badge badge-accent'
-                                : 'badge badge-neutral'
+                              u.role === 'admin' ? 'badge badge-accent' : 'badge badge-neutral'
                             }
                           >
                             {u.role === 'admin' ? 'Admin' : 'Member'}
@@ -280,7 +160,7 @@ export function AdminUsersPage() {
                           </Show>
                         </td>
                         <td data-label="Joined" class="text-slate-500 text-xs">
-                          {formatDate(u.createdAt)}
+                          {formatDate(u.createdAt, { fallback: '—' })}
                         </td>
                         <td data-label="Actions" class="text-right">
                           <div class="flex items-center justify-end gap-1">
@@ -292,7 +172,7 @@ export function AdminUsersPage() {
                               Posts
                             </button>
                             <button
-                              onClick={() => openEditDialog(u)}
+                              onClick={() => setEditUser(u)}
                               class="btn btn-ghost text-xs px-2 py-1"
                             >
                               Edit
@@ -329,210 +209,24 @@ export function AdminUsersPage() {
       </div>
 
       {/* Add Member Modal */}
-      <Show when={createOpen()}>
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-            onClick={() => setCreateOpen(false)}
-          />
-          <div class="relative w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-6 z-10 space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold text-slate-900 text-lg">Add new member</h3>
-              <button
-                onClick={() => setCreateOpen(false)}
-                class="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <Icon name="x" size={18} />
-              </button>
-            </div>
-
-            <Show when={createError()}>
-              <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-                {createError()}
-              </div>
-            </Show>
-
-            <form onSubmit={handleCreateUser} class="space-y-4">
-              <div>
-                <label class="label">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={createName()}
-                  onInput={(e) => setCreateName(e.currentTarget.value)}
-                  class="input"
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-
-              <div>
-                <label class="label">Email address</label>
-                <input
-                  type="email"
-                  required
-                  value={createEmail()}
-                  onInput={(e) => setCreateEmail(e.currentTarget.value)}
-                  class="input"
-                  placeholder="member@careguide.bd"
-                />
-              </div>
-
-              <div>
-                <label class="label">Temporary password</label>
-                <input
-                  type="password"
-                  required
-                  value={createPassword()}
-                  onInput={(e) => setCreatePassword(e.currentTarget.value)}
-                  class="input"
-                  placeholder="At least 6 characters"
-                />
-              </div>
-
-              <div>
-                <label class="label">Role</label>
-                <select
-                  value={createRole()}
-                  onChange={(e) =>
-                    setCreateRole(e.currentTarget.value as 'user' | 'admin')
-                  }
-                  class="input"
-                >
-                  <option value="user">Member</option>
-                  <option value="admin">Administrator</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="label">Interests (comma separated)</label>
-                <input
-                  type="text"
-                  value={createInterests()}
-                  onInput={(e) => setCreateInterests(e.currentTarget.value)}
-                  class="input"
-                  placeholder="reading, coding, chess"
-                />
-              </div>
-
-              <div class="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setCreateOpen(false)}
-                  class="btn btn-secondary"
-                  disabled={creating()}
-                >
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary" disabled={creating()}>
-                  {creating() ? 'Creating...' : 'Create member'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </Show>
+      <AddMemberDialog
+        open={createOpen()}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => {
+          setCreateOpen(false);
+          loadUsers(page());
+        }}
+      />
 
       {/* Edit Member Modal */}
-      <Show when={editUser()}>
-        {(u) => {
-          const isSelf = () => currentUser()?._id === u()._id;
-
-          return (
-            <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div
-                class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-                onClick={() => setEditUser(null)}
-              />
-              <div class="relative w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-6 z-10 space-y-4">
-                <div class="flex items-center justify-between">
-                  <h3 class="font-semibold text-slate-900 text-lg">Edit member</h3>
-                  <button
-                    onClick={() => setEditUser(null)}
-                    class="text-slate-400 hover:text-slate-600 p-1"
-                  >
-                    <Icon name="x" size={18} />
-                  </button>
-                </div>
-
-                <Show when={editError()}>
-                  <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-                    {editError()}
-                  </div>
-                </Show>
-
-                <form onSubmit={handleSaveEdit} class="space-y-4">
-                  <div>
-                    <label class="label">Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={editName()}
-                      onInput={(e) => setEditName(e.currentTarget.value)}
-                      class="input"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="label">Email address</label>
-                    <input
-                      type="email"
-                      required
-                      value={editEmail()}
-                      onInput={(e) => setEditEmail(e.currentTarget.value)}
-                      class="input"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="label">Role</label>
-                    <select
-                      value={editRole()}
-                      onChange={(e) =>
-                        setEditRole(e.currentTarget.value as 'user' | 'admin')
-                      }
-                      disabled={isSelf()}
-                      class="input disabled:bg-slate-50 disabled:text-slate-500"
-                    >
-                      <option value="user">Member</option>
-                      <option value="admin">Administrator</option>
-                    </select>
-                    <Show when={isSelf()}>
-                      <p class="text-xs text-slate-500 mt-1">
-                        You cannot change your own role to prevent losing administrator access.
-                      </p>
-                    </Show>
-                  </div>
-
-                  <div>
-                    <label class="label">Interests (comma separated)</label>
-                    <input
-                      type="text"
-                      value={editInterests()}
-                      onInput={(e) => setEditInterests(e.currentTarget.value)}
-                      class="input"
-                      placeholder="reading, coding, chess"
-                    />
-                  </div>
-
-                  <div class="flex items-center justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditUser(null)}
-                      class="btn btn-secondary"
-                      disabled={saving()}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary" disabled={saving()}>
-                      {saving() ? 'Saving...' : 'Save changes'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          );
+      <EditMemberDialog
+        user={editUser()}
+        onClose={() => setEditUser(null)}
+        onSuccess={() => {
+          setEditUser(null);
+          loadUsers(page());
         }}
-      </Show>
+      />
 
       {/* Delete User Confirmation Dialog (FE-03, FE-09) */}
       <ConfirmDialog
@@ -575,9 +269,7 @@ export function AdminUsersPage() {
               class="mt-0.5 text-rose-600 focus:ring-rose-600"
             />
             <div class="text-xs">
-              <span class="font-medium text-rose-900 block">
-                Delete notes and posts too
-              </span>
+              <span class="font-medium text-rose-900 block">Delete notes and posts too</span>
               <span class="text-rose-600 block">
                 Permanently delete all notes and posts created by this member.
               </span>

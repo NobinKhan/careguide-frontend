@@ -1,11 +1,12 @@
 import { Show } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 
 export interface PageHeaderProps {
   crumb?: string;
   title: string;
   description?: string;
-  actions?: any;
-  action?: any;
+  actions?: JSX.Element;
+  action?: JSX.Element;
 }
 
 export function PageHeader(props: PageHeaderProps) {

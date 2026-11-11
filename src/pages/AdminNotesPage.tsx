@@ -5,6 +5,7 @@ import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { formatDate } from '../lib/formatDate';
 
 export function AdminNotesPage() {
   const [notes, setNotes] = createSignal<NoteDTO[]>([]);
@@ -20,10 +21,10 @@ export function AdminNotesPage() {
   // View note preview modal
   const [previewNote, setPreviewNote] = createSignal<NoteDTO | null>(null);
 
-  const loadNotes = async () => {
+  const loadNotes = async (pageNum: number) => {
     setLoading(true);
     try {
-      const res = await api.notes.listAllAdmin(page(), 10);
+      const res = await api.notes.listAllAdmin(pageNum, 10);
       setNotes(res.items);
       setTotalPages(res.totalPages);
       setTotalItems(res.total);
@@ -37,8 +38,8 @@ export function AdminNotesPage() {
 
   createEffect(
     () => page(),
-    () => {
-      loadNotes();
+    (pageNum) => {
+      loadNotes(pageNum);
     }
   );
 
@@ -51,7 +52,7 @@ export function AdminNotesPage() {
       await api.notes.remove(target._id);
       showToast('Note deleted', 'success');
       setDeleteTarget(null);
-      loadNotes();
+      loadNotes(page());
     } catch (err) {
       const msg = err instanceof ApiClientError ? err.message : 'Failed to delete note';
       showToast(msg, 'error');
@@ -60,22 +61,10 @@ export function AdminNotesPage() {
     }
   };
 
-  const formatDate = (iso?: string) => {
-    if (!iso) return '—';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return '—';
-    }
-  };
-
   return (
     <div class="space-y-6">
       <PageHeader
+        crumb="Admin"
         title="All Notes"
         description="Workspace-wide private notes across all members for administration."
       />
@@ -122,9 +111,7 @@ export function AdminNotesPage() {
                           <Show
                             when={note.author}
                             fallback={
-                              <span class="italic text-slate-400 text-xs">
-                                Deleted user
-                              </span>
+                              <span class="italic text-slate-400 text-xs">Deleted user</span>
                             }
                           >
                             {(author) => (
@@ -132,15 +119,13 @@ export function AdminNotesPage() {
                                 <div class="font-medium text-xs text-slate-900 truncate">
                                   {author().name}
                                 </div>
-                                <div class="text-xs text-slate-500 truncate">
-                                  {author().email}
-                                </div>
+                                <div class="text-xs text-slate-500 truncate">{author().email}</div>
                               </div>
                             )}
                           </Show>
                         </td>
                         <td data-label="Created" class="text-xs text-slate-500">
-                          {formatDate(note.createdAt)}
+                          {formatDate(note.createdAt, { fallback: '—' })}
                         </td>
                         <td data-label="Actions" class="text-right">
                           <div class="flex items-center justify-end gap-1">
@@ -197,7 +182,7 @@ export function AdminNotesPage() {
                     ) : (
                       <span class="italic text-slate-400">Deleted user</span>
                     )}{' '}
-                    · {formatDate(note().createdAt)}
+                    · {formatDate(note().createdAt, { fallback: '—' })}
                   </div>
                 </div>
                 <button

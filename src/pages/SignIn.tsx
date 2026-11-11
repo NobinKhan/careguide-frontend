@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { api, setStoredToken, ApiClientError } from '../api/client';
 import { currentUser, setCurrentUser } from '../state/session';
 import { showToast } from '../components/Toast';
+import { AuthShell } from '../components/AuthShell';
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -45,11 +46,15 @@ export function SignIn() {
       setCurrentUser(res.user);
       showToast('Signed in successfully');
       navigate('/notes');
-    } catch (err: any) {
-      if (err instanceof ApiClientError && err.fields) {
-        setFieldErrors(err.fields);
+    } catch (err: unknown) {
+      if (err instanceof ApiClientError) {
+        if (err.fields) {
+          setFieldErrors(err.fields);
+        }
+        setErrorMsg(err.message || 'Invalid email or password');
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : 'Invalid email or password');
       }
-      setErrorMsg(err.message || 'Invalid email or password');
     } finally {
       setIsSubmitting(false);
     }
@@ -69,92 +74,27 @@ export function SignIn() {
       setCurrentUser(res.user);
       showToast(`Signed in as ${demo.name}`);
       navigate('/notes');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Could not sign in with demo account');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not sign in with demo account');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f3f5fa]">
-      <div class="w-full max-w-[400px]">
-        {/* Brand Header */}
-        <div class="flex items-center justify-center gap-3 mb-6">
-          <div class="w-9 h-9 rounded-xl bg-[#3363FF] text-white flex items-center justify-center font-bold text-base shadow-sm">
-            CG
-          </div>
-          <span class="font-bold text-2xl tracking-tight text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
-            Care Guide
-          </span>
-        </div>
-
-        {/* Card */}
-        <div class="card p-8">
-          <h2 class="text-xl font-bold text-slate-900 mb-1">Sign in</h2>
-          <p class="text-sm text-slate-500 mb-6">Welcome back. Sign in to see your notes.</p>
-
-          <Show when={errorMsg()}>
-            <div
-              role="alert"
-              class="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2"
-            >
-              <span>{errorMsg()}</span>
-            </div>
-          </Show>
-
-          <form onSubmit={handleLogin} class="flex flex-col gap-4">
-            <div>
-              <label for="signin-email" class="form-label">
-                Email
-              </label>
-              <input
-                id="signin-email"
-                type="email"
-                autocomplete="email"
-                value={email()}
-                onInput={(e) => setEmail(e.currentTarget.value)}
-                placeholder="you@example.com"
-                required
-                class="form-input"
-              />
-              <Show when={fieldErrors().email}>
-                <p class="text-xs text-red-600 mt-1">{fieldErrors().email}</p>
-              </Show>
-            </div>
-
-            <div>
-              <label for="signin-password" class="form-label">
-                Password
-              </label>
-              <input
-                id="signin-password"
-                type="password"
-                autocomplete="current-password"
-                value={password()}
-                onInput={(e) => setPassword(e.currentTarget.value)}
-                required
-                class="form-input"
-              />
-              <Show when={fieldErrors().password}>
-                <p class="text-xs text-red-600 mt-1">{fieldErrors().password}</p>
-              </Show>
-            </div>
-
-            <button type="submit" disabled={isSubmitting()} class="btn btn-primary w-full mt-2">
-              {isSubmitting() ? 'Signing in…' : 'Sign in'}
-            </button>
-          </form>
-
-          <div class="text-center text-sm text-slate-500 mt-6 pt-5 border-t border-slate-100">
-            New here?{' '}
-            <a href="/signup" class="text-[#3363FF] font-semibold hover:underline">
-              Create an account
-            </a>
-          </div>
-        </div>
-
-        {/* Closed Demo Accounts Panel (DEV mode only) */}
+    <AuthShell
+      title="Sign in"
+      subtitle="Welcome back. Sign in to see your notes."
+      error={errorMsg()}
+      footer={
+        <>
+          New here?{' '}
+          <a href="/signup" class="text-[#3363FF] font-semibold hover:underline">
+            Create an account
+          </a>
+        </>
+      }
+      belowCard={
         <Show when={isDemo}>
           <details class="mt-4 p-4 rounded-xl border border-slate-200 bg-white/70 text-xs text-slate-600 shadow-sm">
             <summary class="font-medium text-slate-700 cursor-pointer select-none">
@@ -182,7 +122,50 @@ export function SignIn() {
             </div>
           </details>
         </Show>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleLogin} class="flex flex-col gap-4">
+        <div>
+          <label for="signin-email" class="form-label">
+            Email
+          </label>
+          <input
+            id="signin-email"
+            type="email"
+            autocomplete="email"
+            value={email()}
+            onInput={(e) => setEmail(e.currentTarget.value)}
+            placeholder="you@example.com"
+            required
+            class="form-input"
+          />
+          <Show when={fieldErrors().email}>
+            <p class="text-xs text-red-600 mt-1">{fieldErrors().email}</p>
+          </Show>
+        </div>
+
+        <div>
+          <label for="signin-password" class="form-label">
+            Password
+          </label>
+          <input
+            id="signin-password"
+            type="password"
+            autocomplete="current-password"
+            value={password()}
+            onInput={(e) => setPassword(e.currentTarget.value)}
+            required
+            class="form-input"
+          />
+          <Show when={fieldErrors().password}>
+            <p class="text-xs text-red-600 mt-1">{fieldErrors().password}</p>
+          </Show>
+        </div>
+
+        <button type="submit" disabled={isSubmitting()} class="btn btn-primary w-full mt-2">
+          {isSubmitting() ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

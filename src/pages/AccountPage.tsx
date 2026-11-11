@@ -4,6 +4,7 @@ import { currentUser, setCurrentUser, signOut } from '../state/session';
 import { showToast } from '../components/Toast';
 import { PageHeader } from '../components/PageHeader';
 import { Icon } from '../components/Icon';
+import { formatDate } from '../lib/formatDate';
 
 export function AccountPage() {
   const user = () => currentUser();
@@ -45,22 +46,10 @@ export function AccountPage() {
     }
   };
 
-  const formatDate = (iso?: string) => {
-    if (!iso) return '—';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch {
-      return '—';
-    }
-  };
-
   return (
     <div class="space-y-6 max-w-3xl">
       <PageHeader
+        crumb="Account"
         title="Account"
         description="View your profile details and update your preferences."
       />
@@ -79,11 +68,7 @@ export function AccountPage() {
           <div>
             <div class="flex items-center gap-2">
               <h3 class="font-medium text-slate-900 text-base">{user()?.name}</h3>
-              <span
-                class={
-                  user()?.role === 'admin' ? 'badge badge-accent' : 'badge badge-neutral'
-                }
-              >
+              <span class={user()?.role === 'admin' ? 'badge badge-accent' : 'badge badge-neutral'}>
                 {user()?.role === 'admin' ? 'Administrator' : 'Member'}
               </span>
             </div>
@@ -104,7 +89,9 @@ export function AccountPage() {
           </div>
           <div>
             <span class="text-slate-400 block mb-1">Member Since</span>
-            <span class="font-medium text-slate-800">{formatDate(user()?.createdAt)}</span>
+            <span class="font-medium text-slate-800">
+              {formatDate(user()?.createdAt, { fallback: '—' })}
+            </span>
           </div>
         </div>
       </div>
@@ -126,12 +113,15 @@ export function AccountPage() {
 
         <form onSubmit={handleSaveInterests} class="space-y-4">
           <div>
-            <label class="label">Interests (comma-separated)</label>
+            <label for="account-interests" class="form-label">
+              Interests (comma-separated)
+            </label>
             <input
+              id="account-interests"
               type="text"
               value={interestsText()}
               onInput={(e) => setInterestsText(e.currentTarget.value)}
-              class="input"
+              class="form-input"
               placeholder="e.g. chess, coding, photography, reading"
             />
             <p class="text-xs text-slate-400 mt-1.5">
@@ -140,11 +130,7 @@ export function AccountPage() {
           </div>
 
           <div class="flex items-center justify-end">
-            <button
-              type="submit"
-              class="btn btn-primary"
-              disabled={savingInterests()}
-            >
+            <button type="submit" class="btn btn-primary" disabled={savingInterests()}>
               {savingInterests() ? 'Saving...' : 'Save interests'}
             </button>
           </div>
@@ -155,9 +141,7 @@ export function AccountPage() {
       <div class="card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-rose-100 bg-rose-50/20">
         <div>
           <h2 class="text-sm font-semibold text-slate-900">Sign out of session</h2>
-          <p class="text-xs text-slate-500 mt-0.5">
-            End your current session on this device.
-          </p>
+          <p class="text-xs text-slate-500 mt-0.5">End your current session on this device.</p>
         </div>
         <button
           onClick={() => signOut()}

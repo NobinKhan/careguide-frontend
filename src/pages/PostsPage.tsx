@@ -5,6 +5,7 @@ import { Pagination } from '../components/Pagination';
 import { EmptyState } from '../components/EmptyState';
 import { Icon } from '../components/Icon';
 import { showToast } from '../components/Toast';
+import { formatDate } from '../lib/formatDate';
 
 export function PostsPage() {
   const [posts, setPosts] = createSignal<PostDTO[]>([]);
@@ -29,8 +30,8 @@ export function PostsPage() {
       setPage(res.page);
       setTotalPages(res.totalPages);
       setTotal(res.total);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to load posts', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to load posts', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +63,11 @@ export function PostsPage() {
       showToast('Post published');
       setIsEditorOpen(false);
       fetchPosts(1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiClientError && err.fields) {
         setFieldErrors(err.fields);
       }
-      setFormError(err.message || 'Failed to publish post');
+      setFormError(err instanceof Error ? err.message : 'Failed to publish post');
     } finally {
       setIsPublishing(false);
     }
@@ -79,21 +80,10 @@ export function PostsPage() {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const formatDate = (iso?: string) => {
-    if (!iso) return '';
-    try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return '';
-    }
-  };
-
   return (
     <div>
       <PageHeader
+        crumb="Workspace"
         title="Posts"
         description="Updates everyone can read."
         actions={
@@ -141,7 +131,9 @@ export function PostsPage() {
                     <div class="flex items-center gap-2 min-w-0">
                       <Show
                         when={post.author}
-                        fallback={<span class="text-xs font-medium text-slate-400">Deleted user</span>}
+                        fallback={
+                          <span class="text-xs font-medium text-slate-400">Deleted user</span>
+                        }
                       >
                         {(author) => (
                           <a

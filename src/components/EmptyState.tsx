@@ -1,11 +1,12 @@
 import { Show } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import { Icon, type IconName } from './Icon';
 
 export interface EmptyStateProps {
   icon?: IconName;
   title: string;
   description?: string;
-  action?: any;
+  action?: JSX.Element;
 }
 
 export function EmptyState(props: EmptyStateProps) {
