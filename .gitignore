@@ -4,3 +4,7 @@ dist/
 *.log
 .DS_Store
 .agents/
+
+# Local env overrides (may hold dev-only demo passwords)
+.env.*.local
+.env.local
