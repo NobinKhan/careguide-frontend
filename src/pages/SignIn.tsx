@@ -1,4 +1,4 @@
-import { createSignal, createEffect, Show, For } from 'solid-js';
+import { createSignal, createEffect, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { api, setStoredToken, ApiClientError } from '../api/client';
 import { currentUser, setCurrentUser } from '../state/session';
@@ -22,14 +22,14 @@ export function SignIn() {
   const [errorMsg, setErrorMsg] = createSignal<string | null>(null);
   const [fieldErrors, setFieldErrors] = createSignal<Record<string, string>>({});
 
-  const isDemo = import.meta.env.DEV || import.meta.env.VITE_DEMO === 'true';
-
-  const demoAccounts = [
-    { name: 'System Admin', email: 'admin@careguide.bd', role: 'admin', pass: 'Admin@123' },
-    { name: 'Kazi Nazrul', email: 'nazrul@careguide.bd', role: 'user', pass: 'User@123' },
-    { name: 'Abdur Rahim', email: 'rahim@careguide.bd', role: 'user', pass: 'User@123' },
-    { name: 'Abdul Karim', email: 'karim@careguide.bd', role: 'user', pass: 'User@123' },
-  ];
+  const demoAccounts = import.meta.env.DEV
+    ? [
+        { name: 'System Admin', email: 'admin@careguide.bd', role: 'admin', pass: 'Admin@123' },
+        { name: 'Kazi Nazrul', email: 'nazrul@careguide.bd', role: 'user', pass: 'User@123' },
+        { name: 'Abdur Rahim', email: 'rahim@careguide.bd', role: 'user', pass: 'User@123' },
+        { name: 'Abdul Karim', email: 'karim@careguide.bd', role: 'user', pass: 'User@123' },
+      ]
+    : [];
 
   const handleLogin = async (e: Event) => {
     e.preventDefault();
@@ -61,6 +61,7 @@ export function SignIn() {
   };
 
   const handleUseDemo = async (demo: (typeof demoAccounts)[0]) => {
+    if (!import.meta.env.DEV) return;
     setErrorMsg(null);
     setFieldErrors({});
     setIsSubmitting(true);
@@ -81,6 +82,52 @@ export function SignIn() {
     }
   };
 
+  const devDemoPanel = () => {
+    if (!import.meta.env.DEV || demoAccounts.length === 0) return undefined;
+    const details = document.createElement('details');
+    details.className =
+      'mt-4 p-4 rounded-xl border border-slate-200 bg-white/70 text-xs text-slate-600 shadow-sm';
+    const summary = document.createElement('summary');
+    summary.className = 'font-medium text-slate-700 cursor-pointer select-none';
+    summary.textContent = 'Demo accounts';
+    details.appendChild(summary);
+
+    const container = document.createElement('div');
+    container.className = 'mt-3 flex flex-col gap-2 pt-2 border-t border-slate-100';
+
+    for (const acc of demoAccounts) {
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between py-1';
+
+      const info = document.createElement('div');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'font-semibold text-slate-800';
+      nameSpan.textContent = acc.name;
+      const emailSpan = document.createElement('span');
+      emailSpan.className = 'text-slate-400 ml-1.5 font-mono';
+      emailSpan.textContent = acc.email;
+      info.appendChild(nameSpan);
+      info.appendChild(emailSpan);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-secondary px-2.5 py-1 text-xs min-h-[28px]';
+      btn.textContent = 'Use this account';
+      btn.onclick = () => {
+        if (!isSubmitting()) {
+          handleUseDemo(acc);
+        }
+      };
+
+      row.appendChild(info);
+      row.appendChild(btn);
+      container.appendChild(row);
+    }
+
+    details.appendChild(container);
+    return details;
+  };
+
   return (
     <AuthShell
       title="Sign in"
@@ -94,35 +141,7 @@ export function SignIn() {
           </a>
         </>
       }
-      belowCard={
-        <Show when={isDemo}>
-          <details class="mt-4 p-4 rounded-xl border border-slate-200 bg-white/70 text-xs text-slate-600 shadow-sm">
-            <summary class="font-medium text-slate-700 cursor-pointer select-none">
-              Demo accounts
-            </summary>
-            <div class="mt-3 flex flex-col gap-2 pt-2 border-t border-slate-100">
-              <For each={demoAccounts}>
-                {(acc) => (
-                  <div class="flex items-center justify-between py-1">
-                    <div>
-                      <span class="font-semibold text-slate-800">{acc.name}</span>
-                      <span class="text-slate-400 ml-1.5 font-mono">{acc.email}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUseDemo(acc)}
-                      disabled={isSubmitting()}
-                      class="btn btn-secondary px-2.5 py-1 text-xs min-h-[28px]"
-                    >
-                      Use this account
-                    </button>
-                  </div>
-                )}
-              </For>
-            </div>
-          </details>
-        </Show>
-      }
+      belowCard={devDemoPanel()}
     >
       <form onSubmit={handleLogin} class="flex flex-col gap-4">
         <div>
