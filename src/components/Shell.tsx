@@ -28,9 +28,9 @@ export function Shell(props: { children?: JSX.Element }) {
   ];
 
   return (
-    <div class="min-h-screen flex flex-col md:flex-row bg-[#f3f5fa] text-[#1a2233]">
+    <div class="min-h-screen flex flex-col min-[901px]:flex-row bg-[#f3f5fa] text-[#1a2233]">
       {/* Desktop Sidebar (260px fixed) */}
-      <aside class="hidden md:flex flex-col w-[260px] shrink-0 border-r border-[rgba(20,30,50,0.06)] bg-[rgba(255,255,255,0.85)] p-5 min-h-screen fixed top-0 left-0 bottom-0 z-30">
+      <aside class="hidden min-[901px]:flex flex-col w-[260px] shrink-0 border-r border-[rgba(20,30,50,0.06)] bg-[rgba(255,255,255,0.85)] p-5 min-h-screen fixed top-0 left-0 bottom-0 z-30">
         {/* Brand */}
         <div class="flex items-center gap-3 px-3 py-2 mb-6">
           <div class="w-8 h-8 rounded-lg bg-[#3363FF] text-white flex items-center justify-center font-bold text-sm shadow-sm">
@@ -131,11 +131,11 @@ export function Shell(props: { children?: JSX.Element }) {
       </aside>
 
       {/* Main Layout Area */}
-      <div class="flex-1 flex flex-col md:pl-[260px] min-h-screen min-w-0">
+      <div class="flex-1 flex flex-col min-[901px]:pl-[260px] min-h-screen min-w-0">
         {/* Top bar */}
-        <header class="h-16 px-4 md:px-8 border-b border-[rgba(20,30,50,0.06)] bg-[rgba(255,255,255,0.8)] backdrop-blur-md sticky top-0 z-20 flex items-center justify-between md:justify-end">
+        <header class="h-16 px-4 min-[901px]:px-8 border-b border-[rgba(20,30,50,0.06)] bg-[rgba(255,255,255,0.8)] backdrop-blur-md sticky top-0 z-20 flex items-center justify-between min-[901px]:justify-end">
           {/* Mobile brand header */}
-          <div class="flex items-center gap-2.5 md:hidden">
+          <div class="flex items-center gap-2.5 min-[901px]:hidden">
             <div class="w-7 h-7 rounded-lg bg-[#3363FF] text-white flex items-center justify-center font-bold text-xs">
               CG
             </div>
@@ -197,13 +197,13 @@ export function Shell(props: { children?: JSX.Element }) {
         </header>
 
         {/* Content View Container */}
-        <main class="flex-1 max-w-[1180px] w-full mx-auto px-4 sm:px-6 md:px-8 py-6 pb-24 md:pb-8 min-w-0">
+        <main class="flex-1 max-w-[1180px] w-full mx-auto px-4 sm:px-6 min-[901px]:px-8 py-6 pb-24 min-[901px]:pb-8 min-w-0">
           {props.children}
         </main>
 
         {/* Mobile Bottom Bar (<=900px) */}
         <nav
-          class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-[rgba(20,30,50,0.08)] z-40 flex items-center justify-around px-2"
+          class="min-[901px]:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-[rgba(20,30,50,0.08)] z-40 flex items-center justify-around px-2"
           aria-label="Mobile navigation"
         >
           <a
@@ -246,7 +246,7 @@ export function Shell(props: { children?: JSX.Element }) {
         {/* Mobile More Sheet */}
         <Show when={isMoreSheetOpen()}>
           <div
-            class="md:hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end"
+            class="min-[901px]:hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end"
             onClick={(e) => {
               if (e.target === e.currentTarget) setIsMoreSheetOpen(false);
             }}
