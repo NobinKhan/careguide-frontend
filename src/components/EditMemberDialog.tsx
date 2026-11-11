@@ -2,7 +2,7 @@ import { createSignal, createEffect, Show } from 'solid-js';
 import { api, ApiClientError } from '../api/client';
 import { currentUser } from '../state/session';
 import { showToast } from './Toast';
-import { Icon } from './Icon';
+import { Dialog } from './Dialog';
 
 export interface EditMemberDialogProps {
   user: UserDTO | null;
@@ -73,106 +73,98 @@ export function EditMemberDialog(props: EditMemberDialogProps) {
   };
 
   return (
-    <Show when={props.user}>
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div
-          class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-          onClick={() => props.onClose()}
-        />
-        <div class="relative w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-6 z-10 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-slate-900 text-lg">Edit member</h3>
-            <button onClick={() => props.onClose()} class="text-slate-400 hover:text-slate-600 p-1">
-              <Icon name="x" size={18} />
-            </button>
+    <Dialog
+      open={Boolean(props.user)}
+      title="Edit member"
+      titleId="edit-member-dialog-title"
+      onClose={props.onClose}
+    >
+      <Show when={props.user}>
+        <Show when={error()}>
+          <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+            {error()}
+          </div>
+        </Show>
+
+        <form onSubmit={handleSubmit} class="space-y-4">
+          <div>
+            <label for="edit-member-name" class="form-label">
+              Full Name
+            </label>
+            <input
+              id="edit-member-name"
+              type="text"
+              required
+              value={name()}
+              onInput={(e) => setName(e.currentTarget.value)}
+              class="form-input"
+            />
           </div>
 
-          <Show when={error()}>
-            <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-              {error()}
-            </div>
-          </Show>
+          <div>
+            <label for="edit-member-email" class="form-label">
+              Email address
+            </label>
+            <input
+              id="edit-member-email"
+              type="email"
+              required
+              value={email()}
+              onInput={(e) => setEmail(e.currentTarget.value)}
+              class="form-input"
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} class="space-y-4">
-            <div>
-              <label for="edit-member-name" class="form-label">
-                Full Name
-              </label>
-              <input
-                id="edit-member-name"
-                type="text"
-                required
-                value={name()}
-                onInput={(e) => setName(e.currentTarget.value)}
-                class="form-input"
-              />
-            </div>
+          <div>
+            <label for="edit-member-role" class="form-label">
+              Role
+            </label>
+            <select
+              id="edit-member-role"
+              value={role()}
+              onChange={(e) => setRole(e.currentTarget.value as 'user' | 'admin')}
+              disabled={isSelf()}
+              class="form-input disabled:bg-slate-50 disabled:text-slate-500"
+            >
+              <option value="user">Member</option>
+              <option value="admin">Administrator</option>
+            </select>
+            <Show when={isSelf()}>
+              <p class="text-xs text-slate-500 mt-1">
+                You cannot change your own role to prevent losing administrator access.
+              </p>
+            </Show>
+          </div>
 
-            <div>
-              <label for="edit-member-email" class="form-label">
-                Email address
-              </label>
-              <input
-                id="edit-member-email"
-                type="email"
-                required
-                value={email()}
-                onInput={(e) => setEmail(e.currentTarget.value)}
-                class="form-input"
-              />
-            </div>
+          <div>
+            <label for="edit-member-interests" class="form-label">
+              Interests (comma separated)
+            </label>
+            <input
+              id="edit-member-interests"
+              type="text"
+              value={interests()}
+              onInput={(e) => setInterests(e.currentTarget.value)}
+              class="form-input"
+              placeholder="reading, coding, chess"
+            />
+          </div>
 
-            <div>
-              <label for="edit-member-role" class="form-label">
-                Role
-              </label>
-              <select
-                id="edit-member-role"
-                value={role()}
-                onChange={(e) => setRole(e.currentTarget.value as 'user' | 'admin')}
-                disabled={isSelf()}
-                class="form-input disabled:bg-slate-50 disabled:text-slate-500"
-              >
-                <option value="user">Member</option>
-                <option value="admin">Administrator</option>
-              </select>
-              <Show when={isSelf()}>
-                <p class="text-xs text-slate-500 mt-1">
-                  You cannot change your own role to prevent losing administrator access.
-                </p>
-              </Show>
-            </div>
-
-            <div>
-              <label for="edit-member-interests" class="form-label">
-                Interests (comma separated)
-              </label>
-              <input
-                id="edit-member-interests"
-                type="text"
-                value={interests()}
-                onInput={(e) => setInterests(e.currentTarget.value)}
-                class="form-input"
-                placeholder="reading, coding, chess"
-              />
-            </div>
-
-            <div class="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => props.onClose()}
-                class="btn btn-secondary"
-                disabled={saving()}
-              >
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary" disabled={saving()}>
-                {saving() ? 'Saving...' : 'Save changes'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Show>
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => props.onClose()}
+              class="btn btn-secondary"
+              disabled={saving()}
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" disabled={saving()}>
+              {saving() ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
+        </form>
+      </Show>
+    </Dialog>
   );
 }

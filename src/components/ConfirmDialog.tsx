@@ -41,20 +41,31 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
     }
   };
 
+  let triggerEl: HTMLElement | null = null;
+
   createEffect(
     () => props.open ?? props.isOpen ?? false,
     (isOpen) => {
       if (isOpen) {
+        triggerEl = document.activeElement as HTMLElement | null;
         window.addEventListener('keydown', handleKeyDown);
         setTimeout(() => confirmBtnRef?.focus(), 50);
       } else {
         window.removeEventListener('keydown', handleKeyDown);
+        if (triggerEl && typeof triggerEl.focus === 'function') {
+          triggerEl.focus();
+          triggerEl = null;
+        }
       }
     }
   );
 
   onCleanup(() => {
     window.removeEventListener('keydown', handleKeyDown);
+    if (triggerEl && typeof triggerEl.focus === 'function') {
+      triggerEl.focus();
+      triggerEl = null;
+    }
   });
 
   const isDanger = () =>
